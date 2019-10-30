@@ -78,28 +78,26 @@ cc.Class({
         this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IABawKRb1lddDABYzv2smd0f11VtMvngeOig4NbOmrxluuJ8ivcAAAAAEABqLS7leE66XQEAAQB3Trpd";
         this.userID = "";
         this.joined = false;
-        this.muteRemote = false;
-        this.muteLocal = false;
+        this.muteRemote = true;
+        this.muteLocal = true;
         this.mapMembers = new Map();
     },
 
     onLoad: function() {
-        this.enableMediaDevices();
-
         // 初始化用戶名稱
         var dateTime = Date.now();
         var timestamp = Math.floor(dateTime / 1000);
         this.userID = timestamp;
         this.lblUserID.string = this.userID;
-
+        
         this.btnLocal.interactable = false;
         this.btnRemote.interactable = false;
-        this.btnLeaveChannel.interactable = false;
         this.btnCreateChannel.interactable = false;
-
+        this.btnJoinChannel.interactable = false;
+        this.btnLeaveChannel.interactable = false;
+        
         this.updateMute();
-        this.initAgoraEvents();
-        this.initAgora();
+        this.enableMediaDevices();
     },
 
     update: function() {
@@ -116,6 +114,59 @@ cc.Class({
 
     onDestroy: function () {
         this.uninitAgoraEvents();
+    },
+
+    // ======
+    // initialization
+    // ======
+
+    enableMediaDevices: function() {
+        this.printLog("Navigator Info:");
+        console.log(navigator);
+
+        var mediaPermission = false;
+        switch (navigator.vendor) {
+            case "Google Inc.":
+                mediaPermission = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia ||  navigator.msGetUserMedia
+                var self = this;
+                if (mediaPermission) {
+                    navigator.getUserMedia({audio:true}, function onSuccess(stream) {
+                        self.printLog("麥克風權限請求成功");
+                        console.log(stream);
+                    }, function onError(error) {
+                        self.printLog("麥克風權限請求失敗");
+                        console.log(error);
+                    });
+                } else {
+                    this.printLog(navigator.vendor + ": 不支援 navigator.getUserMedia");
+                }
+                break;
+
+            case "Apple Computer, Inc.":
+                mediaPermission = navigator.mediaDevices.getUserMedia;
+                var self = this;
+                if (mediaPermission) {
+                    navigator.mediaDevices.getUserMedia({audio:true})
+                    .then(function(stream) {
+                        self.printLog("麥克風權限請求成功");
+                        console.log(stream);
+                    })
+                    .catch(function(error) {
+                        self.printLog("麥克風權限請求失敗");
+                        console.log(error);
+                    });
+                } else {
+                    this.printLog(navigator.vendor + ": 不支援 navigator.mediaDevices.getUserMedia");
+                }
+                break;
+        }
+    },
+
+    updateMute: function() {
+        this.localSpriteOff.node.active = this.muteLocal;
+        this.localSpriteOn.node.active = !this.muteLocal;
+        this.remoteSpriteOff.node.active = this.muteRemote;
+        this.remoteSpriteOn.node.active = !this.muteRemote;
     },
 
     initAgoraEvents: function() {
@@ -166,55 +217,19 @@ cc.Class({
         }
     },
 
-    enableMediaDevices: function() {
-        this.printLog("Navigator Info:");
-        console.log(navigator);
-
-        var mediaPermission = false;
-        switch (navigator.vendor) {
-            case "Google Inc.":
-                mediaPermission = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia ||  navigator.msGetUserMedia
-                var self = this;
-                if (mediaPermission) {
-                    navigator.getUserMedia({audio:true}, function onSuccess(stream) {
-                        self.printLog("麥克風權限請求成功");
-                        console.log(stream);
-                    }, function onError(error) {
-                        self.printLog("麥克風權限請求失敗");
-                        console.log(error);
-                    });
-                } else {
-                    this.printLog(navigator.vendor + ": 不支援 navigator.getUserMedia");
-                }
-                break;
-
-            case "Apple Computer, Inc.":
-                mediaPermission = navigator.mediaDevices.getUserMedia;
-                var self = this;
-                if (mediaPermission) {
-                    navigator.mediaDevices.getUserMedia({audio:true})
-                    .then(function(stream) {
-                        self.printLog("麥克風權限請求成功");
-                        console.log(stream);
-                    })
-                    .catch(function(error) {
-                        self.printLog("麥克風權限請求失敗");
-                        console.log(error);
-                    });
-                } else {
-                    this.printLog(navigator.vendor + ": 不支援 navigator.mediaDevices.getUserMedia");
-                }
-                break;
-        }
-    },
-
     initAgora: function() {
+        this.initAgoraEvents();
         agora.init(this.appID);
+        this.btnJoinChannel.interactable = true;
 
         this.printLog("初始化 Agora 引擎");
     },
 
-    joinChannel: function() {
+    // ======
+    // GUI Event
+    // ======
+
+    btnEventJoinChannel: function() {
         if (this.joined) {
             this.leaveChannel();
             return;
@@ -235,7 +250,7 @@ cc.Class({
         agora.joinChannel(this.tmpToken, channel, "", this.userID);
     },
 
-    leaveChannel: function() {
+    btnEventLeaveChannel: function() {
         if (!this.joined) {
             this.printLog("未加入頻道");
             return;
@@ -248,20 +263,13 @@ cc.Class({
         agora.leaveChannel();
     },
 
-    updateMute: function() {
-        this.localSpriteOff.node.active = this.muteLocal;
-        this.localSpriteOn.node.active = !this.muteLocal;
-        this.remoteSpriteOff.node.active = this.muteRemote;
-        this.remoteSpriteOn.node.active = !this.muteRemote;
-    },
-
-    btnLocalStream: function() {
+    btnEventLocalStream: function() {
         this.muteLocal = !this.muteLocal;
         this.updateMute();
         agora.muteLocalAudioStream(this.muteLocal);
     },
 
-    btnRemoteStream: function() {
+    btnEventRemoteStream: function() {
         this.muteRemote = !this.muteRemote;
         this.updateMute();
         agora.muteAllRemoteAudioStreams(this.muteRemote);

@@ -196,7 +196,7 @@
                     agora.emit('connection-interrupted');
                 });
                 agora.client.on("client-role-changed", function (evt) {
-                    agora.emit('client-role-changed', evt.role);
+                    agora.emit('client-role-changed', null, evt.role);
                 });
                 agora.client.on("error", err => {
                     agora.emit('error', err, err.reason);
@@ -248,6 +248,7 @@
                 let usedTime = endTime - agora.startTime;
                 cc.log('Agora(Web platform) service used time(s) ： ' + Math.floor(usedTime / 1000));
                 agora.emit('leave-channel', null);
+                agora.stream.stop();
                 agora.stream.close();
                 agora.stream = null;
             }, err => {
