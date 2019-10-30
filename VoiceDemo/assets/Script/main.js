@@ -84,23 +84,7 @@ cc.Class({
     },
 
     onLoad: function() {
-        this.printLog("Navigator Info:");
-        this.printLog(navigator);
-
-        // 請求麥克風
-        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-        var self = this;
-        if (navigator.getUserMedia) {
-            navigator.getUserMedia({audio:true}, function onSuccess(stream) {
-                self.printLog("麥克風權限請求成功");
-                console.log(stream);
-            }, function onError(error) {
-                self.printLog("麥克風權限請求失敗");
-                console.log(error);
-            });
-        } else {
-            this.printLog("不支援 navigator.getUserMedia");
-        }
+        this.enableMediaDevices();
 
         // 初始化用戶名稱
         var dateTime = Date.now();
@@ -179,6 +163,48 @@ cc.Class({
             agora.off('request-token', this.onRequestToken, this);
             agora.off('connection-banned', this.onConnectionBanned, this);
             agora.off('client-role-changed', this.onClientRoleChanged, this);
+        }
+    },
+
+    enableMediaDevices: function() {
+        this.printLog("Navigator Info:");
+        console.log(navigator);
+
+        var mediaPermission = false;
+        switch (navigator.vendor) {
+            case "Google Inc.":
+                mediaPermission = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia ||  navigator.msGetUserMedia
+                var self = this;
+                if (mediaPermission) {
+                    navigator.getUserMedia({audio:true}, function onSuccess(stream) {
+                        self.printLog("麥克風權限請求成功");
+                        console.log(stream);
+                    }, function onError(error) {
+                        self.printLog("麥克風權限請求失敗");
+                        console.log(error);
+                    });
+                } else {
+                    this.printLog(navigator.vendor + ": 不支援 navigator.getUserMedia");
+                }
+                break;
+
+            case "Apple Computer, Inc.":
+                mediaPermission = navigator.mediaDevices.getUserMedia;
+                var self = this;
+                if (mediaPermission) {
+                    navigator.mediaDevices.getUserMedia({audio:true})
+                    .then(function(stream) {
+                        self.printLog("麥克風權限請求成功");
+                        console.log(stream);
+                    })
+                    .catch(function(error) {
+                        self.printLog("麥克風權限請求失敗");
+                        console.log(error);
+                    });
+                } else {
+                    this.printLog(navigator.vendor + ": 不支援 navigator.mediaDevices.getUserMedia");
+                }
+                break;
         }
     },
 
@@ -364,6 +390,7 @@ cc.Class({
     },
 
     onRecordingDeviceChanged: function(state, device) {
-        this.printLog("onRecordingDeviceChanged, state: " + state + " device: " + device);
+        this.printLog("onRecordingDeviceChanged, state: " + state + " device: ");
+        console.log(device);
     },
 });
