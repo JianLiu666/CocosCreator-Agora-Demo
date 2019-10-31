@@ -154,7 +154,7 @@
                         }(t, n), !(t < S)) switch (t) {
                         case 0:
                         case 1:
-                            console.log.apply(console, n);
+                            // console.log.apply(console, n);
                             break;
                         case 2:
                             console.warn.apply(console, n);

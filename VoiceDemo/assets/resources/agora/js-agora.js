@@ -153,6 +153,7 @@
                 agora.stream.stop();
                 agora.stream.close();
                 agora.stream = null;
+                agora.remoteStreams.length = 0;
                 agora.emit("leave-channel-success", null);
             }, err => {
                 agora.emit("error", err, "leave channel failed!");
@@ -161,8 +162,6 @@
 
         agora.muteLocalAudioStream = function(mute) {
             mute ? agora.stream.muteAudio() : agora.stream.unmuteAudio();
-
-            console.log(agora.stream);
         };
 
         agora.muteAllRemoteAudioStreams = function(mute) {

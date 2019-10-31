@@ -250,12 +250,7 @@ cc.Class({
         }
 
         this.btnLeaveChannel.interactable = false;
-        this.muteLocal = true;
-        this.muteRemote = true;
-        this.updateMute();
 
-        agora.muteLocalAudioStream(this.muteLocal);
-        agora.muteAllRemoteAudioStreams(this.muteRemote);
         agora.enableAudioVolumeIndication(-1, 3);
         agora.leaveChannel();
     },
@@ -282,10 +277,14 @@ cc.Class({
 
     onLocalStreamPublishedAndPlayed: function() {
         this.printLog("onLocalStreamPublishedAndPlayed");
+
+        agora.muteLocalAudioStream(this.muteLocal);
     },
 
     onRemoteStreamSubscribedAndPlayed: function(uid) {
         this.printLog("onRemoteStreamSubscribedAndPlayed, uid: " + uid);
+
+        agora.muteRemoteAudioStream(uid, this.muteRemote);
     },
 
     onPeerOnline: function (uid, elapsed) {
@@ -338,9 +337,6 @@ cc.Class({
         this.lblLivingChannel.string = "目前頻道: " + channel;
         this.mapMembers.set(uid.toString(), Number);
 
-        this.printLog("[IsMuted] Local:" + this.muteLocal + ", Remote:" + this.muteRemote);
-        agora.muteLocalAudioStream(this.muteLocal);
-        agora.muteAllRemoteAudioStreams(this.muteRemote);
         agora.enableAudioVolumeIndication(200, 3);
 
         this.printLog("Join channel success, channel: " + channel + " uid: " + uid + " elapsed: " + elapsed);
