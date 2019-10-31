@@ -8,6 +8,8 @@ const {
 const Paths = {
     sdkPath: join(__dirname, 'AgoraRTCSDK-2.5.2.js'),
     sdkURL: 'ccservices-scripts/AgoraRTCSDK-2.5.2.js',
+    // sdkPath: join(__dirname, 'AgoraRTCSDK-2.9.0.js'),
+    // sdkURL: 'ccservices-scripts/AgoraRTCSDK-2.9.0.js',
 };
 
 module.exports = {

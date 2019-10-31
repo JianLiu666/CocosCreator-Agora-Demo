@@ -123,16 +123,15 @@
             alert("Your browser does not support WebRTC!");
         }
         if (agora.client == null) agora.client = AgoraRTC.createClient({
-            mode: "live",
-            codec: "h264"
+            mode: "rtc",
+            codec: "vp8"
         });
         agora.init = function (appid) {
             // initialize an array to manage remote streams
             // local stream is accessed via agora.stream
             agora.remoteStreams = [];
             agora.client.init(appid, () => {
-                agora.emit("init-success");
-                agora.client.on("volume-indicator", evt => {
+                agora.client.on("volume-indicator", function (evt) {
                     var speakers = [];
                     var sumVolume = 0;
                     evt.attr.forEach(function (volume, index) {
@@ -140,6 +139,14 @@
                         sumVolume += volume.level;
                     });
                     agora.emit('audio-volume-indication', speakers, speakers.length, sumVolume / speakers.length);
+                });
+                agora.client.on("stream-added", function (evt) {
+                    var stream = evt.stream;
+                    agora.client.subscribe(stream, function (err) {
+                        agora.emit('error', err, "Subscribe stream failed");
+                    });
+                    console.log("[stream-added] Add local stream successfully: " + stream.getId());
+                    agora.emit('user-joined', stream.getId(), null);
                 });
                 agora.client.on("peer-leave", function (evt) {
                     // agora.emit('leave-channel', evt);
@@ -152,14 +159,6 @@
                         console.log("[peer-leave] Remove remote stream successfully: " + uid);
                         agora.emit('user-offline', uid, null);
                     }
-                });
-                agora.client.on("stream-added", function (evt) {
-                    var stream = evt.stream;
-                    agora.client.subscribe(stream, function (err) {
-                        agora.emit('error', err, "Subscribe stream failed");
-                    });
-                    console.log("[stream-added] Add local stream successfully: " + stream.getId());
-                    agora.emit('user-joined', stream.getId(), null);
                 });
                 agora.client.on('stream-subscribed', function (evt) {
                     var remoteStream = evt.stream;
@@ -186,7 +185,7 @@
                 agora.client.on("unmute-audio", function (evt) {
                     agora.emit('user-mute-audio', evt.uid, false);
                 });
-                agora.client.on("recordingDeviceChanged", function (evt) {
+                agora.client.on("recording-device-changed", function (evt) {
                     agora.emit('recording-device-changed', evt.state, evt.device);
                 });
                 agora.client.on("onTokenPrivilegeWillExpire", function () {
@@ -198,9 +197,17 @@
                 agora.client.on("client-role-changed", function (evt) {
                     agora.emit('client-role-changed', null, evt.role);
                 });
+                agora.client.on('stream-published', function (evt) {
+                    agora.stream.play("Cocos2dGameContainer", {}, function(errState) {
+                        console.log(errState);
+                    });
+                    
+                    console.log("Publish local stream successfully");
+                });
                 agora.client.on("error", err => {
                     agora.emit('error', err, err.reason);
-                })
+                });
+                agora.emit("init-success");
             }, err => {
                 agora.emit("error", err, "client init failed!");
             });
@@ -212,31 +219,30 @@
             agora.stream.setClientRole(role);
         };
         agora.joinChannel = function (token, channelId, info, uid) {
-            agora.client.join(token, channelId, uid, uid => {
+            agora.client.join(token, channelId, uid, function(uid) {
                 if (agora.stream == null) agora.stream = AgoraRTC.createStream({
                     streamID: uid,
                     audio: true,
                     video: false,
                     screen: false
                 });
+
                 agora.stream.init(function () {
                     console.log("getUserMedia successfully");
-                    agora.stream.play('Cocos2dGameContainer');
 
                     agora.client.publish(agora.stream, function (err) {
                         console.log("Publish local stream error: " + err);
                     });
 
-                    agora.client.on('stream-published', function (evt) {
-                        console.log("Publish local stream successfully");
-                    });
                 }, function (err) {
                     console.log("getUserMedia failed", err);
                 });
                 console.log("create stream!");
+
                 agora.startTime = new Date();
                 cc.log('Agora(Web platform) service start using time : ' + agora.startTime.toString());
                 agora.emit('join-channel-success', channelId, uid, null);
+                
             }, err => {
                 agora.emit("error", err, "join channel failed!");
             });
@@ -266,6 +272,8 @@
                 agora.stream.muteAudio();
             else
                 agora.stream.unmuteAudio();
+
+            console.log(agora.stream);
         };
         agora.enableLocalAudio = function (enabled) {
             var localAudioTrack = agora.stream.getAudioTrack();

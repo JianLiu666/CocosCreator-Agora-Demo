@@ -37,6 +37,11 @@ cc.Class({
             type: cc.Button
         },
 
+        btnInitAgora: {
+            default: null,
+            type: cc.Button
+        },
+
         remoteSpriteOn: {
             default: null,
             type: cc.Sprite
@@ -75,11 +80,11 @@ cc.Class({
 
     ctor: function() {
         this.appID = "1c90b643b8294de0953ee2fbe9ebd859";
-        this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IABawKRb1lddDABYzv2smd0f11VtMvngeOig4NbOmrxluuJ8ivcAAAAAEABqLS7leE66XQEAAQB3Trpd";
+        this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IAC6rFaAQXCnpWdAAY3EoE19kwFbfTEuiGinwVoTvlygXOJ8ivcAAAAAEABqLS7ldQ67XQEAAQB1Drtd";
         this.userID = "";
         this.joined = false;
-        this.muteRemote = true;
-        this.muteLocal = true;
+        this.muteRemote = false;
+        this.muteLocal = false;
         this.mapMembers = new Map();
     },
 
@@ -217,17 +222,19 @@ cc.Class({
         }
     },
 
-    initAgora: function() {
+    // ======
+    // GUI Event
+    // ======
+
+    btnEventInitAgora: function() {
         this.initAgoraEvents();
         agora.init(this.appID);
+
+        this.btnInitAgora.interactable = false;
         this.btnJoinChannel.interactable = true;
 
         this.printLog("初始化 Agora 引擎");
     },
-
-    // ======
-    // GUI Event
-    // ======
 
     btnEventJoinChannel: function() {
         if (this.joined) {
@@ -241,9 +248,6 @@ cc.Class({
             return;
         }
 
-        // agora.muteLocalAudioStream(this.muteLocal);
-        // agora.muteAllRemoteAudioStreams(this.muteRemote);
-
         this.btnJoinChannel.interactable = false;
         this.lblLivingChannel.string = "搜尋頻道中...";
 
@@ -256,10 +260,14 @@ cc.Class({
             return;
         }
 
+        this.btnLeaveChannel.interactable = false;
+        this.muteLocal = true;
+        this.muteRemote = true;
+        this.updateMute();
+
         agora.muteLocalAudioStream(this.muteLocal);
         agora.muteAllRemoteAudioStreams(this.muteRemote);
-
-        this.btnLeaveChannel.interactable = false;
+        agora.enableAudioVolumeIndication(-1, 3);
         agora.leaveChannel();
     },
 
@@ -292,9 +300,9 @@ cc.Class({
         this.lblLivingChannel.string = "目前頻道: " + channel;
         this.mapMembers.set(uid.toString(), Number);
 
+        this.printLog("[IsMuted] Local:" + this.muteLocal + ", Remote:" + this.muteRemote);
         agora.muteLocalAudioStream(this.muteLocal);
         agora.muteAllRemoteAudioStreams(this.muteRemote);
-
         agora.enableAudioVolumeIndication(200, 3);
 
         this.printLog("Join channel success, channel: " + channel + " uid: " + uid + " elapsed: " + elapsed);
