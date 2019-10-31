@@ -126,97 +126,100 @@
             mode: "rtc",
             codec: "vp8"
         });
+        agora.printLog = function (key, source) {
+            console.log("%c%s %c%s ", "background: #222222; color: #FF8800;", "[Received]", "background: #222222; color: #F5F5F5;", key);
+            // console.log("[Received] " + key);
+            if (source !== null) {
+                console.log(source);
+            }
+        }
         agora.init = function (appid) {
             // initialize an array to manage remote streams
             // local stream is accessed via agora.stream
             agora.remoteStreams = [];
-            agora.client.init(appid, () => {
+            agora.client.init(appid, function() {
+                agora.client.on("first-audio-frame-decode", function (evt) {
+                   agora.printLog("first-audio-frame-decode", evt);
+                });
+                agora.client.on("stream-published", function (evt) {
+                   agora.printLog("stream-published", evt);
+                    agora.stream.play("Cocos2dGameContainer", {}, function(errState) {
+                        console.log(errState);
+                    });
+                });
+                agora.client.on("stream-added", function (evt) {
+                   agora.printLog("stream-added", evt);
+                    var stream = evt.stream;
+                    agora.client.subscribe(stream, function (err) {
+                        agora.emit("error", err, "Subscribe stream failed");
+                    });
+                });
+                agora.client.on("stream-removed", function (evt) {
+                   agora.printLog("stream-removed", evt);
+                    var stream = evt.stream;
+                    stream.stop();
+                    agora.remoteStreams = agora.remoteStreams.filter(function (item) {
+                        return item.getId() !== stream.getId();
+                    })
+                });
+                agora.client.on("stream-subscribed", function (evt) {
+                   agora.printLog("stream-subscribed", evt);
+                    var remoteStream = evt.stream;
+                    //add remote stream to list
+                    agora.remoteStreams.push(remoteStream);
+                    remoteStream.play("Cocos2dGameContainer", {}, function(errState) {
+                        console.log(errState);
+                    });
+                })
+                agora.client.on("peer-online", function (evt) {
+                    agora.printLog("peer-online", evt);
+                    agora.emit("user-joined", evt.uid, null);
+                });
+                agora.client.on("peer-leave", function (evt) {
+                    agora.printLog("peer-leave", evt);
+                    agora.emit("user-offline", evt.uid, null);
+                });
+                agora.client.on("mute-audio", function (evt) {
+                   agora.printLog("mute-audio", evt);
+                    agora.emit("user-mute-audio", evt.uid, true);
+                });
+                agora.client.on("unmute-audio", function (evt) {
+                   agora.printLog("unmute-audio", evt);
+                    agora.emit("user-mute-audio", evt.uid, false);
+                });
+                agora.client.on("client-banned", function (evt) {
+                   agora.printLog("client-banned", evt);
+                    agora.emit("connection-interrupted");
+                });
+                agora.client.on("recording-device-changed", function (evt) {
+                   agora.printLog("recording-device-changed", evt);
+                    agora.emit("recording-device-changed", evt.state, evt.device);
+                });
+                agora.client.on("onTokenPrivilegeWillExpire", function () {
+                   agora.printLog("onTokenPrivilegeWillExpire", evt);
+                    agora.emit("request-token");
+                });
+                agora.client.on("client-role-changed", function (evt) {
+                   agora.printLog("client-role-changed", evt);
+                    agora.emit("client-role-changed", null, evt.role);
+                });
                 agora.client.on("volume-indicator", function (evt) {
+                    //agora.printLog("volume-indicator", evt);
                     var speakers = [];
                     var sumVolume = 0;
                     evt.attr.forEach(function (volume, index) {
                         speakers.push({ uid: volume.uid, volume: volume.level });
                         sumVolume += volume.level;
                     });
-                    agora.emit('audio-volume-indication', speakers, speakers.length, sumVolume / speakers.length);
-                });
-                agora.client.on("stream-added", function (evt) {
-                    var stream = evt.stream;
-                    agora.client.subscribe(stream, function (err) {
-                        agora.emit('error', err, "Subscribe stream failed");
-                    });
-                    console.log("[stream-added] Add local stream successfully: " + stream.getId());
-                    agora.emit('user-joined', stream.getId(), null);
-                });
-                agora.client.on("peer-leave", function (evt) {
-                    // agora.emit('leave-channel', evt);
-                    if (evt.stream) {
-                        var uid = evt.stream.getId();
-                        evt.stream.stop();
-                        agora.remoteStreams = agora.remoteStreams.filter(function (item) {
-                            return item.getId() !== uid
-                        });
-                        console.log("[peer-leave] Remove remote stream successfully: " + uid);
-                        agora.emit('user-offline', uid, null);
-                    }
-                });
-                agora.client.on('stream-subscribed', function (evt) {
-                    var remoteStream = evt.stream;
-                    //add remote stream to list
-                    agora.remoteStreams.push(remoteStream);
-                    remoteStream.play('Cocos2dGameContainer');
-                    console.log("[stream-subscribed] Subscribe remote stream successfully: " + remoteStream.getId());
-                })
-                agora.client.on("stream-removed", function (evt) {
-                    if (evt.stream) {
-                        var uid = evt.stream.getId();
-                        evt.stream.stop();
-                        // remove remote stream from list
-                        agora.remoteStreams = agora.remoteStreams.filter(function (item) {
-                            return item.getId() !== uid;
-                        });
-                        console.log("[stream-removed] Remove remote stream successfully: " + uid);
-                        // agora.emit('user-offline', stream.getId(), null);
-                    }
-                });
-                agora.client.on("mute-audio", function (evt) {
-                    agora.emit('user-mute-audio', evt.uid, true);
-                });
-                agora.client.on("unmute-audio", function (evt) {
-                    agora.emit('user-mute-audio', evt.uid, false);
-                });
-                agora.client.on("recording-device-changed", function (evt) {
-                    agora.emit('recording-device-changed', evt.state, evt.device);
-                });
-                agora.client.on("onTokenPrivilegeWillExpire", function () {
-                    agora.emit('request-token');
-                });
-                agora.client.on("client-banned", function (evt) {
-                    agora.emit('connection-interrupted');
-                });
-                agora.client.on("client-role-changed", function (evt) {
-                    agora.emit('client-role-changed', null, evt.role);
-                });
-                agora.client.on('stream-published', function (evt) {
-                    agora.stream.play("Cocos2dGameContainer", {}, function(errState) {
-                        console.log(errState);
-                    });
-                    
-                    console.log("Publish local stream successfully");
+                    agora.emit("audio-volume-indication", speakers, speakers.length, sumVolume / speakers.length);
                 });
                 agora.client.on("error", err => {
-                    agora.emit('error', err, err.reason);
+                    agora.emit("error", err, err.reason);
                 });
                 agora.emit("init-success");
             }, err => {
                 agora.emit("error", err, "client init failed!");
             });
-        };
-        agora.setChannelProfile = function (profile) {
-            cc.log("web not support");
-        };
-        agora.setClientRole = function (role) {
-            agora.stream.setClientRole(role);
         };
         agora.joinChannel = function (token, channelId, info, uid) {
             agora.client.join(token, channelId, uid, function(uid) {
@@ -228,57 +231,40 @@
                 });
 
                 agora.stream.init(function () {
-                    console.log("getUserMedia successfully");
-
+                    console.log("Stream Initiated");
                     agora.client.publish(agora.stream, function (err) {
-                        console.log("Publish local stream error: " + err);
+                        console.error("Publish local stream error");
+                        console.error(err);
                     });
-
                 }, function (err) {
-                    console.log("getUserMedia failed", err);
+                    console.error("getUserMedia failed");
+                    console.error(err);
                 });
-                console.log("create stream!");
 
-                agora.startTime = new Date();
-                cc.log('Agora(Web platform) service start using time : ' + agora.startTime.toString());
-                agora.emit('join-channel-success', channelId, uid, null);
-                
+                agora.emit("join-channel-success", channelId, uid, null);
             }, err => {
                 agora.emit("error", err, "join channel failed!");
             });
         };
         agora.leaveChannel = function () {
-            agora.client.leave(() => {
-                var endTime = new Date();
-                cc.log('Agora(Web platform) service stop use time : ' + endTime.toString());
-                let usedTime = endTime - agora.startTime;
-                cc.log('Agora(Web platform) service used time(s) ： ' + Math.floor(usedTime / 1000));
-                agora.emit('leave-channel', null);
+            agora.client.unpublish(agora.stream, function(err) {
+                console.err("Unpublish local stream error");
+                console.err(err);
+            });
+
+            agora.client.leave(function() {
                 agora.stream.stop();
                 agora.stream.close();
                 agora.stream = null;
+                agora.emit("leave-channel", null);
             }, err => {
                 agora.emit("error", err, "leave channel failed!");
             })
         };
-        agora.enableAudio = function () {
-            agora.stream.unmuteAudio();
-        };
-        agora.disableAudio = function () {
-            agora.stream.muteAudio();
-        };
         agora.muteLocalAudioStream = function (mute) {
-            if (mute)
-                agora.stream.muteAudio();
-            else
-                agora.stream.unmuteAudio();
+            mute ? agora.stream.muteAudio() : agora.stream.unmuteAudio();
 
             console.log(agora.stream);
-        };
-        agora.enableLocalAudio = function (enabled) {
-            var localAudioTrack = agora.stream.getAudioTrack();
-            if (enabled) agora.stream.addTrack(localAudioTrack);
-            else agora.stream.removeTrack(localAudioTrack);
         };
         agora.muteAllRemoteAudioStreams = function (mute) {
             agora.remoteStreams.forEach(function (stream) {
@@ -291,6 +277,16 @@
                     mute ? stream.muteAudio() : stream.unmuteAudio();
                 }
             })
+        };
+        agora.setChannelProfile = function (profile) {
+            cc.log("web not support");
+        };
+        agora.setClientRole = function (role) {
+            agora.stream.setClientRole(role);
+        };
+        agora.enableLocalAudio = function (enabled) {
+            var localAudioTrack = agora.stream.getAudioTrack();
+            enabled ? agora.stream.addTrack(localAudioTrack) : agora.stream.removeTrack(localAudioTrack);
         };
         agora.enableAudioVolumeIndication = function (interval, smooth) {
             agora.client.enableAudioVolumeIndicator();
