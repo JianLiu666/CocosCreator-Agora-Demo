@@ -176,25 +176,16 @@ cc.Class({
 
     initAgoraEvents: function() {
         if (agora) {
-            agora.on('join-channel-success', this.onJoinChannelSuccess, this);
-            agora.on('audio-volume-indication', this.onAudioVolumeIndication, this);
-            agora.on('error', this.onError, this);
-            agora.on('leave-channel', this.onLeaveChannel, this);
-            agora.on('user-joined', this.onUserJoined, this);
-            agora.on('user-offline', this.onUserOffline, this);
-            agora.on('user-mute-audio', this.onUserMuteAudio, this);
-            agora.on('connection-interrupted', this.onConnectionInterrupted, this);
-            agora.on('request-token', this.onRequestToken, this);
-            agora.on('client-role-changed', this.onClientRoleChanged, this);
-            agora.on('rejoin-channel-success', this.onRejoinChannelSuccess, this);
-            agora.on('audio-quality', this.onAudioQuality, this);
-            agora.on('warning', this.onWarning, this);
-            agora.on('network-quality', this.onNetworkQuality, this);
-            agora.on('audio-routing-changed', this.onAudioRoutingChanged, this);
-            agora.on('connection-lost', this.onConnectionLost, this);
-            agora.on('connection-banned', this.onConnectionBanned, this);
-            agora.on('init-success', this.onInitSuccess, this);
-            agora.on('recording-device-changed', this.onRecordingDeviceChanged, this);
+            agora.on("first-audio-frame-decode", this.onFirstAudioFrameDecode, this);
+            agora.on("local-stream-published-and-played", this.onLocalStreamPublishedAndPlayed, this);
+            agora.on("peer-online", this.onPeerOnline, this);
+            agora.on("peer-leave", this.onPeerLeave, this);
+            agora.on("mute-audio", this.onMuteAudio, this);
+            agora.on("volume-indicator", this.onVolumeIndicator, this);
+            agora.on("init-success", this.onInitSuccess, this);
+            agora.on("join-channel-success", this.onJoinChannelSuccess, this);
+            agora.on("leave-channel-success", this.onLeaveChannelSuccess, this);
+            agora.on("error", this.onError, this);
 
             this.printLog("初始化 Agora 監聽事件");
         }
@@ -202,24 +193,22 @@ cc.Class({
 
     uninitAgoraEvents: function () {
         if (agora) {
-            agora.off('join-channel-success', this.onJoinChannelSuccess);
-            agora.off('leave-channel', this.onLeaveChannel);
-            agora.off('rejoin-channel-success', this.onRejoinChannelSuccess, this);
-            agora.off('warning', this.onWarning, this);
-            agora.off('error', this.onError, this);
-            agora.off('audio-quality', this.onAudioQuality, this);
-            agora.off('audio-volume-indication', this.onAudioVolumeIndication, this);
-            agora.off('network-quality', this.onNetworkQuality, this);
-            agora.off('user-joined', this.onUserJoined, this);
-            agora.off('user-offline', this.onUserOffline, this);
-            agora.off('user-mute-audio', this.onUserMuteAudio, this);
-            agora.off('audio-routing-changed', this.onAudioRoutingChanged, this);
-            agora.off('connection-lost', this.onConnectionLost, this);
-            agora.off('connection-interrupted', this.onConnectionInterrupted, this);
-            agora.off('request-token', this.onRequestToken, this);
-            agora.off('connection-banned', this.onConnectionBanned, this);
-            agora.off('client-role-changed', this.onClientRoleChanged, this);
+            agora.off("first-audio-frame-decode", this.onFirstAudioFrameDecode, this);
+            agora.off("local-stream-published-and-played", this.onLocalStreamPublishedAndPlayed, this);
+            agora.off("peer-online", this.onPeerOnline, this);
+            agora.off("peer-leave", this.onPeerLeave, this);
+            agora.off("mute-audio", this.onMuteAudio, this);
+            agora.off("volume-indicator", this.onVolumeIndicator, this);
+            agora.off("init-success", this.onInitSuccess, this);
+            agora.off("join-channel-success", this.onJoinChannelSuccess, this);
+            agora.off("leave-channel-success", this.onLeaveChannelSuccess, this);
+            agora.off("error", this.onError, this);
         }
+    },
+
+    printLog: function (info) {
+        console.log("%c%s %c%s ", "background: #222222; color: #00FF00;", "[CocosInfo]", "background: #222222; color: #F5F5F5;", info);
+        // console.log("[CocosInfo] " + info);
     },
 
     // ======
@@ -287,9 +276,58 @@ cc.Class({
     // Hook Event
     // ======
 
-    printLog: function (info) {
-        console.log("%c%s %c%s ", "background: #222222; color: #00FF00;", "[CocosInfo]", "background: #222222; color: #F5F5F5;", info);
-        // console.log("[CocosInfo] " + info);
+    onFirstAudioFrameDecode: function(uid) {
+        this.printLog("onFirstAudioFrameDecode, uid: " + uid);
+    },
+
+    onLocalStreamPublishedAndPlayed: function() {
+        this.printLog("onLocalStreamPublishedAndPlayed");
+    },
+
+    onRemoteStreamSubscribedAndPlayed: function(uid) {
+        this.printLog("onRemoteStreamSubscribedAndPlayed, uid: " + uid);
+    },
+
+    onPeerOnline: function (uid, elapsed) {
+        this.mapMembers.set(uid.toString(), Number);
+
+        this.printLog("onPeerOnline, uid: " + uid + " elapsed: " + elapsed);
+    },
+
+    onPeerLeave: function (uid, reason) {
+        this.mapMembers.delete(uid.toString());
+
+        this.printLog("onPeerLeave, uid: " + uid + " reason: " + reason);
+    },
+
+    onMuteAudio: function (uid, muted) {
+        this.printLog("onMuteAudio, uid: " + uid + " muted: " + muted);
+    },
+
+    onVolumeIndicator: function (speakers, speakerNumber, totalVolume) {
+        for(var [key, value] of this.mapMembers) {
+            this.mapMembers.set(key, 0);
+        }
+
+        if (speakerNumber <= 0) {
+            return;
+        } 
+
+        this.printLog("onVolumeIndicator, speakerNumber: " + speakerNumber + ", totalVolume: " + totalVolume);
+        for (var i = 0; i < speakerNumber; i++) {
+            if (speakers[i].uid == 0) {
+                this.printLog("onVolumeIndicator, Local Speaker volume: " + speakers[i].volume);
+                return;
+            } else {
+                this.mapMembers.set(speakers[i].uid.toString(), speakers[i].volume);
+
+                this.printLog("onVolumeIndicator, Remote Speaker: [" + i + "], uid: " + speakers[i].uid + ", volume: " + speakers[i].volume);
+            }
+        }
+    },
+
+    onInitSuccess: function() {
+        this.printLog("onInitSuccess");
     },
 
     onJoinChannelSuccess: function (channel, uid, elapsed) {
@@ -308,7 +346,7 @@ cc.Class({
         this.printLog("Join channel success, channel: " + channel + " uid: " + uid + " elapsed: " + elapsed);
     },
 
-    onLeaveChannel: function (stat) {
+    onLeaveChannelSuccess: function (stat) {
         this.joined = false;
         this.btnLocal.interactable = false;
         this.btnRemote.interactable = false;
@@ -319,94 +357,11 @@ cc.Class({
         this.printLog("onLeaveChannel, stat: " + stat);
     },
 
-    onRejoinChannelSuccess: function (channel, uid, elapsed) {
-        this.printLog("onRejoinChannelSuccess, channel: " + channel + " uid: " + uid + " elapsed: " + elapsed);
-    },
-
     onWarning: function (warn, msg) {
         this.printLog("onWarning, warn: " + warn + " msg: " + msg);
     },
 
     onError: function (warn, msg) {
         this.printLog("onError, warn: " + warn + " msg: " + msg);
-    },
-
-    onAudioQuality: function (uid, quality, delay, lost) {
-        this.printLog("onAudioQuality, uid: " + uid + " quality: " + quality + " delay: " + delay + " lost: " + lost);
-    },
-
-    onAudioVolumeIndication: function (speakers, speakerNumber, totalVolume) {
-        for(var [key, value] of this.mapMembers) {
-            this.mapMembers.set(key, 0);
-        }
-
-        if (speakerNumber <= 0) {
-            return;
-        } 
-
-        this.printLog("onAudioVolumeIndication, speakerNumber: " + speakerNumber + ", totalVolume: " + totalVolume);
-        for (var i = 0; i < speakerNumber; i++) {
-            if (speakers[i].uid == 0) {
-                this.printLog("onAudioVolumeIndication, Local Speaker volume: " + speakers[i].volume);
-                return;
-            } else {
-                this.mapMembers.set(speakers[i].uid.toString(), speakers[i].volume);
-
-                this.printLog("onAudioVolumeIndication, Remote Speaker: [" + i + "], uid: " + speakers[i].uid + ", volume: " + speakers[i].volume);
-            }
-        }
-    },
-
-    onNetworkQuality: function (uid, txQuality, rxQuality) {
-        this.printLog("onNetworkQuality, uid: " + uid + " txQuality: " + txQuality + " rxQuality: " + rxQuality);
-    },
-
-    onUserJoined: function (uid, elapsed) {
-        this.mapMembers.set(uid.toString(), Number);
-
-        this.printLog("onUserJoined, uid: " + uid + " elapsed: " + elapsed);
-    },
-
-    onUserOffline: function (uid, reason) {
-        this.mapMembers.delete(uid.toString());
-
-        this.printLog("onUserOffline, uid: " + uid + " reason: " + reason);
-    },
-
-    onUserMuteAudio: function (uid, muted) {
-        this.printLog("onUserMuteAudio, uid: " + uid + " muted: " + muted);
-    },
-
-    onAudioRoutingChanged: function (routing) {
-        this.printLog("onAudioRoutingChanged, routing: " + routing);
-    },
-
-    onConnectionLost: function () {
-        this.printLog("onConnectionLost");
-    },
-
-    onConnectionInterrupted: function () {
-        this.printLog("onConnectionInterrupted");
-    },
-
-    onRequestToken: function () {
-        this.printLog("onRequestToken");
-    },
-
-    onConnectionBanned: function () {
-        this.printLog("onConnectionBanned");
-    },
-
-    onClientRoleChanged: function (oldRole, newRole) {
-        this.printLog("onClientRoleChanged, oldRole: " + oldRole + ", newRole: " + newRole);
-    },
-
-    onInitSuccess: function() {
-        this.printLog("onInitSuccess");
-    },
-
-    onRecordingDeviceChanged: function(state, device) {
-        this.printLog("onRecordingDeviceChanged, state: " + state + " device: ");
-        console.log(device);
     },
 });
