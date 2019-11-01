@@ -80,7 +80,7 @@ cc.Class({
 
     ctor: function() {
         this.appID = "1c90b643b8294de0953ee2fbe9ebd859";
-        this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IAC6rFaAQXCnpWdAAY3EoE19kwFbfTEuiGinwVoTvlygXOJ8ivcAAAAAEABqLS7ldQ67XQEAAQB1Drtd";
+        this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IAC7Kmpr073TujgeLhBl4n9FpYiAFU9TvxWn6ijA8Z9P8uJ8ivcAAAAAEACbME2992a9XQEAAQD4Zr1d";
         this.userID = "";
         this.joined = false;
         this.muteRemote = false;
@@ -347,7 +347,7 @@ cc.Class({
         this.btnLocal.interactable = false;
         this.btnRemote.interactable = false;
         this.btnJoinChannel.interactable = true;
-        this.lblLivingChannel.string = "目前沒有加入到任何頻道中";
+        this.lblLivingChannel.string = "尚未加入到任何頻道中";
         this.mapMembers.clear();
 
         this.printLog("onLeaveChannel, stat: " + stat);
