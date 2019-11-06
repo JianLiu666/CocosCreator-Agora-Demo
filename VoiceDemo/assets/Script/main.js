@@ -45,7 +45,6 @@ cc.Class({
         this.btnLeaveChannel.interactable = false;
 
         this.updateMute();
-        this.enableMediaDevices();
     },
 
     update: function () {
@@ -74,8 +73,8 @@ cc.Class({
 
         let mediaPermission = false;
         let self = this;
-        switch (navigator.vendor) {
-            case "Google Inc.":
+        switch (navigator.vendor.includes("Apple")) {
+            case false:
                 mediaPermission = navigator.getUserMedia;
                 if (mediaPermission) {
                     navigator.getUserMedia({audio: true}, function onSuccess(stream) {
@@ -90,7 +89,7 @@ cc.Class({
                 }
                 break;
 
-            case "Apple Computer, Inc.":
+            case true:
                 mediaPermission = navigator.mediaDevices.getUserMedia;
                 if (mediaPermission) {
                     navigator.mediaDevices.getUserMedia({audio: true})
@@ -160,6 +159,7 @@ cc.Class({
     // ======
 
     btnEventInitAgora: function () {
+        this.enableMediaDevices();
         this.initAgoraEvents();
         agora.init(this.appID);
 
