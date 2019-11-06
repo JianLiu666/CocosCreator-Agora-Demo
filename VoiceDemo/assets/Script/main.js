@@ -16,6 +16,7 @@ cc.Class({
         ebJoinChannel: cc.EditBox,
         lblUserID: cc.Label,
         lblLivingChannel: cc.Label,
+        lblUrl: cc.Label,
         rtMembers: cc.RichText,
     },
 
@@ -30,6 +31,8 @@ cc.Class({
     },
 
     onLoad: function () {
+        this.lblUrl.string = window.location.href;
+
         // 初始化用戶名稱
         let dateTime = Date.now();
         this.userID = Math.floor(dateTime / 1000);
