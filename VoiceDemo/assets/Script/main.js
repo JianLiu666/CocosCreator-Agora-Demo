@@ -2,85 +2,26 @@ cc.Class({
     extends: cc.Component,
 
     properties: {
-        localSpriteOn: {
-            default: null,
-            type: cc.Sprite
-        },
-
-        localSpriteOff: {
-            default: null,
-            type: cc.Sprite
-        },
-
-        btnLocal: {
-            default: null,
-            type: cc.Button
-        },
-
-        btnRemote: {
-            default: null,
-            type: cc.Button
-        },
-
-        btnJoinChannel: {
-            default: null,
-            type: cc.Button
-        },
-
-        btnCreateChannel: {
-            default: null,
-            type: cc.Button
-        },
-
-        btnLeaveChannel: {
-            default: null,
-            type: cc.Button
-        },
-
-        btnInitAgora: {
-            default: null,
-            type: cc.Button
-        },
-
-        remoteSpriteOn: {
-            default: null,
-            type: cc.Sprite
-        },
-
-        remoteSpriteOff: {
-            default: null,
-            type: cc.Sprite
-        },
-
-        ebCreateChannel: {
-            default: null,
-            type: cc.EditBox
-        },
-
-        ebJoinChannel: {
-            default: null,
-            type: cc.EditBox
-        },
-
-        lblUserID: {
-            default: null,
-            type: cc.Label
-        },
-
-        lblLivingChannel: {
-            default: null,
-            type: cc.Label
-        },
-        rtMembers: {
-            default: null,
-            type: cc.RichText
-        },
-
+        localSpriteOn: cc.Sprite,
+        localSpriteOff: cc.Sprite,
+        btnLocal: cc.Button,
+        btnRemote: cc.Button,
+        btnJoinChannel: cc.Button,
+        btnCreateChannel: cc.Button,
+        btnLeaveChannel: cc.Button,
+        btnInitAgora: cc.Button,
+        remoteSpriteOn: cc.Sprite,
+        remoteSpriteOff: cc.Sprite,
+        ebCreateChannel: cc.EditBox,
+        ebJoinChannel: cc.EditBox,
+        lblUserID: cc.Label,
+        lblLivingChannel: cc.Label,
+        rtMembers: cc.RichText,
     },
 
-    ctor: function() {
+    ctor: function () {
         this.appID = "1c90b643b8294de0953ee2fbe9ebd859";
-        this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IAC7Kmpr073TujgeLhBl4n9FpYiAFU9TvxWn6ijA8Z9P8uJ8ivcAAAAAEACbME2992a9XQEAAQD4Zr1d";
+        this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IABh2nHyL71PMcd7q5lfwEFchnWysa8mc3CVPafUFISMTeJ8ivcAAAAAEACfZcRHNLbDXQEAAQA1tsNd";
         this.userID = "";
         this.joined = false;
         this.muteRemote = false;
@@ -88,27 +29,26 @@ cc.Class({
         this.mapMembers = new Map();
     },
 
-    onLoad: function() {
+    onLoad: function () {
         // 初始化用戶名稱
-        var dateTime = Date.now();
-        var timestamp = Math.floor(dateTime / 1000);
-        this.userID = timestamp;
+        let dateTime = Date.now();
+        this.userID = Math.floor(dateTime / 1000);
         this.lblUserID.string = this.userID;
-        
+
         this.btnLocal.interactable = false;
         this.btnRemote.interactable = false;
         this.btnCreateChannel.interactable = false;
         this.btnJoinChannel.interactable = false;
         this.btnLeaveChannel.interactable = false;
-        
+
         this.updateMute();
         this.enableMediaDevices();
     },
 
-    update: function() {
+    update: function () {
         this.rtMembers.string = "成員列表:<br />";
-        for(var [key, value] of this.mapMembers) {
-            var tmpString = key;
+        for (let [key, value] of this.mapMembers) {
+            let tmpString = key;
             if (value > 0) {
                 tmpString += ": 說話中...";
             }
@@ -125,17 +65,17 @@ cc.Class({
     // initialization
     // ======
 
-    enableMediaDevices: function() {
+    enableMediaDevices: function () {
         this.printLog("Navigator Info:");
         console.log(navigator);
 
-        var mediaPermission = false;
+        let mediaPermission = false;
+        let self = this;
         switch (navigator.vendor) {
             case "Google Inc.":
-                mediaPermission = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia ||  navigator.msGetUserMedia
-                var self = this;
+                mediaPermission = navigator.getUserMedia;
                 if (mediaPermission) {
-                    navigator.getUserMedia({audio:true}, function onSuccess(stream) {
+                    navigator.getUserMedia({audio: true}, function onSuccess(stream) {
                         self.printLog("麥克風權限請求成功");
                         console.log(stream);
                     }, function onError(error) {
@@ -149,17 +89,16 @@ cc.Class({
 
             case "Apple Computer, Inc.":
                 mediaPermission = navigator.mediaDevices.getUserMedia;
-                var self = this;
                 if (mediaPermission) {
-                    navigator.mediaDevices.getUserMedia({audio:true})
-                    .then(function(stream) {
-                        self.printLog("麥克風權限請求成功");
-                        console.log(stream);
-                    })
-                    .catch(function(error) {
-                        self.printLog("麥克風權限請求失敗");
-                        console.log(error);
-                    });
+                    navigator.mediaDevices.getUserMedia({audio: true})
+                        .then(function (stream) {
+                            self.printLog("麥克風權限請求成功");
+                            console.log(stream);
+                        })
+                        .catch(function (error) {
+                            self.printLog("麥克風權限請求失敗");
+                            console.log(error);
+                        });
                 } else {
                     this.printLog(navigator.vendor + ": 不支援 navigator.mediaDevices.getUserMedia");
                 }
@@ -167,14 +106,14 @@ cc.Class({
         }
     },
 
-    updateMute: function() {
+    updateMute: function () {
         this.localSpriteOff.node.active = this.muteLocal;
         this.localSpriteOn.node.active = !this.muteLocal;
         this.remoteSpriteOff.node.active = this.muteRemote;
         this.remoteSpriteOn.node.active = !this.muteRemote;
     },
 
-    initAgoraEvents: function() {
+    initAgoraEvents: function () {
         if (agora) {
             agora.on("first-audio-frame-decode", this.onFirstAudioFrameDecode, this);
             agora.on("local-stream-published-and-played", this.onLocalStreamPublishedAndPlayed, this);
@@ -185,6 +124,7 @@ cc.Class({
             agora.on("init-success", this.onInitSuccess, this);
             agora.on("join-channel-success", this.onJoinChannelSuccess, this);
             agora.on("leave-channel-success", this.onLeaveChannelSuccess, this);
+            agora.on("warning", this.onWarning, this);
             agora.on("error", this.onError, this);
 
             this.printLog("初始化 Agora 監聽事件");
@@ -202,6 +142,7 @@ cc.Class({
             agora.off("init-success", this.onInitSuccess, this);
             agora.off("join-channel-success", this.onJoinChannelSuccess, this);
             agora.off("leave-channel-success", this.onLeaveChannelSuccess, this);
+            agora.off("warning", this.onWarning, this);
             agora.off("error", this.onError, this);
         }
     },
@@ -215,7 +156,7 @@ cc.Class({
     // GUI Event
     // ======
 
-    btnEventInitAgora: function() {
+    btnEventInitAgora: function () {
         this.initAgoraEvents();
         agora.init(this.appID);
 
@@ -225,14 +166,14 @@ cc.Class({
         this.printLog("初始化 Agora 引擎");
     },
 
-    btnEventJoinChannel: function() {
+    btnEventJoinChannel: function () {
         if (this.joined) {
             this.leaveChannel();
             return;
         }
 
-        var channel = this.ebJoinChannel.string;
-        if (channel == "") {
+        let channel = this.ebJoinChannel.string;
+        if (channel === "") {
             this.printLog("未輸入頻道名稱");
             return;
         }
@@ -243,7 +184,7 @@ cc.Class({
         agora.joinChannel(this.tmpToken, channel, "", this.userID);
     },
 
-    btnEventLeaveChannel: function() {
+    btnEventLeaveChannel: function () {
         if (!this.joined) {
             this.printLog("未加入頻道");
             return;
@@ -255,13 +196,13 @@ cc.Class({
         agora.leaveChannel();
     },
 
-    btnEventLocalStream: function() {
+    btnEventLocalStream: function () {
         this.muteLocal = !this.muteLocal;
         this.updateMute();
         agora.muteLocalAudioStream(this.muteLocal);
     },
 
-    btnEventRemoteStream: function() {
+    btnEventRemoteStream: function () {
         this.muteRemote = !this.muteRemote;
         this.updateMute();
         agora.muteAllRemoteAudioStreams(this.muteRemote);
@@ -271,17 +212,17 @@ cc.Class({
     // Hook Event
     // ======
 
-    onFirstAudioFrameDecode: function(uid) {
+    onFirstAudioFrameDecode: function (uid) {
         this.printLog("onFirstAudioFrameDecode, uid: " + uid);
     },
 
-    onLocalStreamPublishedAndPlayed: function() {
+    onLocalStreamPublishedAndPlayed: function () {
         this.printLog("onLocalStreamPublishedAndPlayed");
 
         agora.muteLocalAudioStream(this.muteLocal);
     },
 
-    onRemoteStreamSubscribedAndPlayed: function(uid) {
+    onRemoteStreamSubscribedAndPlayed: function (uid) {
         this.printLog("onRemoteStreamSubscribedAndPlayed, uid: " + uid);
 
         agora.muteRemoteAudioStream(uid, this.muteRemote);
@@ -304,17 +245,17 @@ cc.Class({
     },
 
     onVolumeIndicator: function (speakers, speakerNumber, totalVolume) {
-        for(var [key, value] of this.mapMembers) {
+        for (let [key, value] of this.mapMembers) {
             this.mapMembers.set(key, 0);
         }
 
         if (speakerNumber <= 0) {
             return;
-        } 
+        }
 
         this.printLog("onVolumeIndicator, speakerNumber: " + speakerNumber + ", totalVolume: " + totalVolume);
-        for (var i = 0; i < speakerNumber; i++) {
-            if (speakers[i].uid == 0) {
+        for (let i = 0; i < speakerNumber; i++) {
+            if (speakers[i].uid === 0) {
                 this.printLog("onVolumeIndicator, Local Speaker volume: " + speakers[i].volume);
                 return;
             } else {
@@ -325,7 +266,7 @@ cc.Class({
         }
     },
 
-    onInitSuccess: function() {
+    onInitSuccess: function () {
         this.printLog("onInitSuccess");
     },
 
