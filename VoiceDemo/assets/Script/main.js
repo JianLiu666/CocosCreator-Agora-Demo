@@ -22,7 +22,7 @@ cc.Class({
 
     ctor: function () {
         this.appID = "1c90b643b8294de0953ee2fbe9ebd859";
-        this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IABh2nHyL71PMcd7q5lfwEFchnWysa8mc3CVPafUFISMTeJ8ivcAAAAAEACfZcRHNLbDXQEAAQA1tsNd";
+        this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IABjhkMpCbDoUrpZ9OQ2v6aEIClF2z9VlZiro13eZakLFOJ8ivcAAAAAEABlT6MBMeXEXQEAAQAv5cRd";
         this.userID = "";
         this.joined = false;
         this.muteRemote = false;
@@ -43,8 +43,13 @@ cc.Class({
         this.btnCreateChannel.interactable = false;
         this.btnJoinChannel.interactable = false;
         this.btnLeaveChannel.interactable = false;
+    },
 
+    start: function () {
         this.updateMute();
+
+        this.printLog("Navigator Info:");
+        console.log(navigator);
     },
 
     update: function () {
@@ -68,9 +73,6 @@ cc.Class({
     // ======
 
     enableMediaDevices: function () {
-        this.printLog("Navigator Info:");
-        console.log(navigator);
-
         let mediaPermission = false;
         let self = this;
         switch (navigator.vendor.includes("Apple")) {
