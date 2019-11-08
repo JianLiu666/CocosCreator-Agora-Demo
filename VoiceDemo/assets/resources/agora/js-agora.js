@@ -13,8 +13,8 @@
         });
 
         agora.printLog = function (key, source) {
-            console.log("%c%s %c%s ", "background: #222222; color: #FF8800;", "[Received]", "background: #222222; color: #F5F5F5;", key);
-            // console.log("[Received] " + key);
+            // console.log("%c%s %c%s ", "background: #222222; color: #FF8800;", "[Received]", "background: #222222; color: #F5F5F5;", key);
+            console.log("[Received] " + key);
             if (source !== null) {
                 console.log(source);
             }

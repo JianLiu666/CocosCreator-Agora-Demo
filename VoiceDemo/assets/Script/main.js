@@ -22,7 +22,7 @@ cc.Class({
 
     ctor: function () {
         this.appID = "1c90b643b8294de0953ee2fbe9ebd859";
-        this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IABjhkMpCbDoUrpZ9OQ2v6aEIClF2z9VlZiro13eZakLFOJ8ivcAAAAAEABlT6MBMeXEXQEAAQAv5cRd";
+        this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IABUIQcS+xhIH2presNzDIKS/RL/bOkUj3AQGBLNXUhRDOJ8ivcAAAAAEABlT6MBwojFXQEAAQDBiMVd";
         this.userID = "";
         this.joined = false;
         this.muteRemote = false;
@@ -73,40 +73,31 @@ cc.Class({
     // ======
 
     enableMediaDevices: function () {
-        let mediaPermission = false;
+        let mediaPermission = navigator.mediaDevices.getUserMedia;
         let self = this;
-        switch (navigator.vendor.includes("Apple")) {
-            case false:
-                mediaPermission = navigator.getUserMedia;
-                if (mediaPermission) {
-                    navigator.getUserMedia({audio: true}, function onSuccess(stream) {
-                        self.printLog("麥克風權限請求成功");
-                        console.log(stream);
-                    }, function onError(error) {
-                        self.printLog("麥克風權限請求失敗");
-                        console.log(error);
-                    });
-                } else {
-                    this.printLog(navigator.vendor + ": 不支援 navigator.getUserMedia");
-                }
-                break;
 
-            case true:
-                mediaPermission = navigator.mediaDevices.getUserMedia;
-                if (mediaPermission) {
-                    navigator.mediaDevices.getUserMedia({audio: true})
-                        .then(function (stream) {
-                            self.printLog("麥克風權限請求成功");
-                            console.log(stream);
-                        })
-                        .catch(function (error) {
-                            self.printLog("麥克風權限請求失敗");
-                            console.log(error);
-                        });
-                } else {
-                    this.printLog(navigator.vendor + ": 不支援 navigator.mediaDevices.getUserMedia");
-                }
-                break;
+        if (mediaPermission) {
+            navigator.mediaDevices.enumerateDevices()
+                .then(function (devices) {
+                    self.printLog("可以被調用的音訊設備");
+                    console.log(devices);
+                })
+                .catch(function (err) {
+                    console.log(err.name + ": " + err.message);
+                });
+
+            navigator.mediaDevices.getUserMedia({audio: true, video: false})
+                .then(function (stream) {
+                    self.printLog("麥克風請求權限成功");
+                    console.log((stream));
+                })
+                .catch(function (error) {
+                    self.printLog("麥克風請求權限失敗");
+                    console.log(error);
+                });
+
+        } else {
+            this.printLog(navigator.vendor + ": 不支援 navigator.mediaDevices.getUserMedia");
         }
     },
 
@@ -152,8 +143,8 @@ cc.Class({
     },
 
     printLog: function (info) {
-        console.log("%c%s %c%s ", "background: #222222; color: #00FF00;", "[CocosInfo]", "background: #222222; color: #F5F5F5;", info);
-        // console.log("[CocosInfo] " + info);
+        // console.log("%c%s %c%s ", "background: #222222; color: #00FF00;", "[CocosInfo]", "background: #222222; color: #F5F5F5;", info);
+        console.log("[CocosInfo] " + info);
     },
 
     // ======
