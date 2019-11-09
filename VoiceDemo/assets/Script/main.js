@@ -21,8 +21,8 @@ cc.Class({
     },
 
     ctor: function () {
-        this.appID = "1c90b643b8294de0953ee2fbe9ebd859";
-        this.tmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IABUIQcS+xhIH2presNzDIKS/RL/bOkUj3AQGBLNXUhRDOJ8ivcAAAAAEABlT6MBwojFXQEAAQDBiMVd";
+        this.agoraAppID = "1c90b643b8294de0953ee2fbe9ebd859";
+        this.agoraTmpToken = "0061c90b643b8294de0953ee2fbe9ebd859IABUIQcS+xhIH2presNzDIKS/RL/bOkUj3AQGBLNXUhRDOJ8ivcAAAAAEABlT6MBwojFXQEAAQDBiMVd";
         this.userID = "";
         this.joined = false;
         this.muteRemote = false;
@@ -154,7 +154,7 @@ cc.Class({
     btnEventInitAgora: function () {
         this.enableMediaDevices();
         this.initAgoraEvents();
-        agora.init(this.appID);
+        agora.init(this.agoraAppID);
 
         this.btnInitAgora.interactable = false;
         this.btnJoinChannel.interactable = true;
@@ -177,7 +177,7 @@ cc.Class({
         this.btnJoinChannel.interactable = false;
         this.lblLivingChannel.string = "搜尋頻道中...";
 
-        agora.joinChannel(this.tmpToken, channel, "", this.userID);
+        agora.joinChannel(this.agoraTmpToken, channel, "", this.userID);
     },
 
     btnEventLeaveChannel: function () {
