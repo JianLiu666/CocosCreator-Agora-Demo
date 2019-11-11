@@ -205,7 +205,7 @@ cc.Class({
     },
 
     // ======
-    // Hook Event
+    // Agora Hook Event
     // ======
 
     onFirstAudioFrameDecode: function (uid) {
@@ -296,5 +296,66 @@ cc.Class({
 
     onError: function (warn, msg) {
         this.printLog("onError, warn: " + warn + " msg: " + msg);
+    },
+
+    // ======
+    // Yunxin Hook Event
+    // ======
+
+    btnEventInitTest1: function () {
+        let self = this;
+        this.nim = SDK.NIM.getInstance({
+            // debug: true,
+            appKey: '44f5576628f6e470e1a0ae9a006ed8c5',
+            account: 'test1',
+            token: '123456',
+            onmsg: self.onMsg
+        });
+    },
+
+    btnEventSendTo2: function () {
+        let self = this;
+        let msg = this.nim.sendText({
+            scene: "p2p",
+            to: "test2",
+            text: "hello",
+            done: self.sendDone
+        })
+    },
+
+    btnAudioStart: function () {
+    },
+
+    btnEventInitTest2: function () {
+        let self = this;
+        let nim = SDK.NIM.getInstance({
+            // debug: true,
+            appKey: '44f5576628f6e470e1a0ae9a006ed8c5',
+            account: 'test2',
+            token: '123456',
+            onmsg: self.onMsg
+        });
+    },
+
+    btnEventSendTo1: function () {
+        let self = this;
+        let msg = this.nim.sendText({
+            scene: "p2p",
+            to: "test1",
+            text: "hello",
+            done: self.sendDone
+        })
+    },
+
+    sendDone: function (error, msg) {
+        console.log("senddone error");
+        console.log(error);
+        console.log("senddone msg");
+        console.log(msg);
+    },
+
+    onMsg: function (obj) {
+        console.log("收到消息:");
+        console.log(obj);
     },
 });
